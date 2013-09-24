@@ -1,24 +1,18 @@
-var users = [
-    { id: '1', username: 'bob', password: 'secret', name: 'Bob Smith' },
-    { id: '2', username: 'joe', password: 'password', name: 'Joe Davis' }
-];
+var ldap = require('ldapjs');
+var client = ldap.createClient({url: 'ldap://localhost:389'});
 
 exports.find = function(id, done) {
-  for (var i = 0, len = users.length; i < len; i++) {
-    var user = users[i];
-    if (user.id === id) {
-      return done(null, user);
-    }
-  }
-  return done(null, null);
+    var opts = {};
+
+    opts.filter = '(entryUUID=' + id + ')';
+    opts.attributes = [ '*', 'entryUUID' ];
+    opts.scope = 'sub';
+
+    client.search('dc=auth,dc=dev,dc=nsip,dc=edu,dc=au', opts, function(err, res) {
+        res.on('searchEntry', function(entry) {
+            return done(null, entry.object);
+        });
+//        return done(err, null);
+    });
 };
 
-exports.findByUsername = function(username, done) {
-  for (var i = 0, len = users.length; i < len; i++) {
-    var user = users[i];
-    if (user.username === username) {
-      return done(null, user);
-    }
-  }
-  return done(null, null);
-};

@@ -1,7 +1,6 @@
 var clients = [
-    { id: '1', name: 'nsip-rp', consumerKey: 'abc123', consumerSecret: 'ssh-secret' }
+    { id: '1', name: 'nsip-rp', consumerKey: '123-456-789', consumerSecret: 'shhh-its-a-secret' }
 ];
-
 
 exports.find = function(id, done) {
   for (var i = 0, len = clients.length; i < len; i++) {

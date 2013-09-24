@@ -39,7 +39,7 @@ passport.deserializeUser(function(id, done) {
 passport.use(new OAuthStrategy({
     requestTokenURL: 'http://auth-idp.dev.nsip.edu.au/oauth/request_token',
     accessTokenURL: 'http://auth-idp.dev.nsip.edu.au/oauth/access_token',
-    userAuthorizationURL: 'http://auth-idp.dev.nsip.edu.au/oauth/authorize',
+    userAuthorizationURL: 'http://auth-idp.dev.nsip.edu.au/dialog/authorize',
     consumerKey: '123-456-789',
     consumerSecret: 'shhh-its-a-secret',
     callbackURL: 'http://auth-rp.dev.nsip.edu.au/oauth/callback'
