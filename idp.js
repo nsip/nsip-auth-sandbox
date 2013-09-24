@@ -44,30 +44,30 @@ var OPTS = {
 
 passport.use(new LDAPStrategy(OPTS));
 
-app.get('/idp/ldap', function(req, res) {
-    res.send('<form action="/idp/ldap" method="post"><div><label>Username:</label><input type="text" name="username"/></div><div><label>Password:</label><input type="password" name="password"/></div><div><input type="submit" value="Log In"/></div></form>');
+app.get('/ldap', function(req, res) {
+    res.send('<form action="/ldap" method="post"><div><label>Username:</label><input type="text" name="username"/></div><div><label>Password:</label><input type="password" name="password"/></div><div><input type="submit" value="Log In"/></div></form>');
 });
 
-app.post('/idp/ldap',
+app.post('/ldap',
   passport.authenticate('ldapauth', {
-    successRedirect: '/idp',
-    failureRedirect: '/idp/login'
+    successRedirect: '/',
+    failureRedirect: '/login'
   })
 );
 
 /*
  * Login redirector - IdP side
  */
-app.get('/idp/login',
+app.get('/login',
   function(req, res) {
-    res.redirect('/idp/ldap');
+    res.redirect('/ldap');
   });
 
 /*
  * Homepage
  */
 app.get('/idp', function(req, res) {
-    cel.ensureLoggedIn('/idp/login');
+    cel.ensureLoggedIn('/login');
     if (req.user) {
 	res.send('<html><body>IdP Welcome ' + req.user.uid + '</body></html>');
     } else {
@@ -75,6 +75,3 @@ app.get('/idp', function(req, res) {
     }
 });
 
-app.get('/', function(req, res) {
-    res.redirect('/idp');
-});

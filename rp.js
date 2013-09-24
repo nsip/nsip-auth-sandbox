@@ -4,8 +4,8 @@
 
 var express = require('express');
 var passport = require('passport');
-var LDAPStrategy = require('passport-ldapauth').Strategy;
 var PersonaStrategy = require('passport-persona').Strategy;
+var OAuthStrategy = require('passport-oauth').OAuthStrategy;
 var cel = require('connect-ensure-login');
 var app = exports.app = express();
 
@@ -33,6 +33,34 @@ passport.deserializeUser(function(id, done) {
 });
 
 /*
+ * OAuth
+ */
+
+passport.use(new OAuthStrategy({
+    requestTokenURL: 'http://auth-idp.dev.nsip.edu.au/oauth/request_token',
+    accessTokenURL: 'http://auth-idp.dev.nsip.edu.au/oauth/access_token',
+    userAuthorizationURL: 'http://auth-idp.dev.nsip.edu.au/oauth/authorize',
+    consumerKey: '123-456-789',
+    consumerSecret: 'shhh-its-a-secret',
+    callbackURL: 'http://auth-rp.dev.nsip.edu.au/oauth/callback'
+  },
+  function(token, tokenSecret, profile, done) {
+    var user = { uid: profile };
+    return done(null, user);
+  }
+));
+
+app.get('/oauth',
+  passport.authenticate('oauth'));
+
+app.get('/oauth/callback',
+  passport.authenticate('oauth', {
+    successRedirect: '/',
+    failureRedirect: '/login'
+  })
+);
+
+/*
  * Persona authentication form
  */
 
@@ -45,42 +73,38 @@ passport.use(new PersonaStrategy({
   }
 ));
 
-app.post('/rp/persona',
+app.post('/persona',
   passport.authenticate('persona', {
-    successRedirect: '/rp',
-    failureRedirect: '/rp/login'
+    successRedirect: '/',
+    failureRedirect: '/login'
   })
 );
 
 /*
  * Login redirector - RP side
  */
-app.get('/rp/login', function(req, res) {
+app.get('/login', function(req, res) {
     var currentUser = "null";
 
     if (req.user) {
 	currentUser = '"' + req.user.uid + '"';
     }
 
-var form = '<html><head><script src="https://login.persona.org/include.js"></script><script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script><script>navigator.id.watch({ loggedInUser: ' + currentUser + ', onlogin: function(assertion) { $.ajax({ type: "POST", url: "/rp/persona", data: {assertion: assertion}, success: function(res, status, xhr) { window.location.replace("/rp"); }, error: function(xhr, status, err) { navigator.id.logout(); alert("Login failure: " + err); } }); }, onlogout: function() { $.ajax({ type: "GET", url: "/rp/logout", success: function(res, status, xhr) { window.location.reload(); }, error: function(xhr, status, err) { alert("Logout failure: " + err); } }); } });</script></head><body><button type="button" onclick="navigator.id.request()">Log In With Persona</button></body></html>';
+var form = '<html><head><script src="https://login.persona.org/include.js"></script><script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script><script>navigator.id.watch({ loggedInUser: ' + currentUser + ', onlogin: function(assertion) { $.ajax({ type: "POST", url: "/persona", data: {assertion: assertion}, success: function(res, status, xhr) { window.location.replace("/rp"); }, error: function(xhr, status, err) { navigator.id.logout(); alert("Login failure: " + err); } }); }, onlogout: function() { $.ajax({ type: "GET", url: "/logout", success: function(res, status, xhr) { window.location.reload(); }, error: function(xhr, status, err) { alert("Logout failure: " + err); } }); } });function oauthRedirect() { window.open("/oauth"); }</script></head><body><button type="button" onclick="navigator.id.request()">Log In With Persona</button><button type="button" onclick="oauthRedirect()">Log In With OAuth 1.0</button></body></html>';
     res.send(form);
 });
 
-app.get('/rp/logout', function(req, res) {
+app.get('/logout', function(req, res) {
     req.session.destroy();
     res.send('<html>Logged out</html>');
 });
 
-app.get('/rp', function(req, res) {
-    cel.ensureLoggedIn('/rp/login');
+app.get('/', function(req, res) {
+    cel.ensureLoggedIn('/login');
     if (req.user) {
 	res.send('<html><body>RP Welcome ' + req.user.uid + '</body></html>');
     } else {
 	res.send('<html><body>Not logged in.</body></html>');
     }
-});
-
-app.get('/', function(req, res) {
-    res.redirect('/rp');
 });
 

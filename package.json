@@ -10,6 +10,7 @@
     "ldapjs": "0.6.3",
     "passport-ldapauth": "0.1.1",
     "passport-local": "0.1.6",
+    "passport-oauth": "1.0.0",
     "passport-persona": "0.1.7"
   }
 }
