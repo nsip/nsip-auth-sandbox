@@ -1,0 +1,15 @@
+{
+  "name": "nsip-auth-sandbox",
+  "description": "NSIP authentication test application",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.x",
+    "connect-ensure-login" : "0.1.1",
+    "passport": "0.1",
+    "ldapjs": "0.6.3",
+    "passport-ldapauth": "0.1.1",
+    "passport-local": "0.1.6",
+    "passport-persona": "0.1.7"
+  }
+}
