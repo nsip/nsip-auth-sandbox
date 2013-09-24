@@ -2,10 +2,19 @@
  * NSIP IdP test sandbox
  */
 
-module.exports = function(app, passport) {
-
+var express = require('express');
+var passport = require('passport');
 var LDAPStrategy = require('passport-ldapauth').Strategy;
 var cel = require('connect-ensure-login');
+var app = exports.app = express();
+
+app.configure(function() {
+    app.use(express.bodyParser());
+    app.use(express.cookieParser());
+    app.use(express.session({ secret: 'nsip-idp-sandbox' }));
+    app.use(passport.initialize());
+    app.use(passport.session());
+});
 
 /*
  * In-memory mapping of users to user information
@@ -66,4 +75,6 @@ app.get('/idp', function(req, res) {
     }
 });
 
-}
+app.get('/', function(req, res) {
+    res.redirect('/idp');
+});

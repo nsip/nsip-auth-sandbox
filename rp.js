@@ -1,8 +1,21 @@
-module.exports = function(app, passport) {
+/*
+ * NSIP RP test sandbox
+ */
 
+var express = require('express');
+var passport = require('passport');
 var LDAPStrategy = require('passport-ldapauth').Strategy;
 var PersonaStrategy = require('passport-persona').Strategy;
 var cel = require('connect-ensure-login');
+var app = exports.app = express();
+
+app.configure(function() {
+    app.use(express.bodyParser());
+    app.use(express.cookieParser());
+    app.use(express.session({ secret: 'nsip-rp-sandbox' }));
+    app.use(passport.initialize());
+    app.use(passport.session());
+});
 
 /*
  * In-memory mapping of users to user information
@@ -24,7 +37,7 @@ passport.deserializeUser(function(id, done) {
  */
 
 passport.use(new PersonaStrategy({
-    audience: 'http://auth.dev.nsip.edu.au'
+    audience: 'http://auth-rp.dev.nsip.edu.au'
   },
   function(email, done) {
     var user = { uid: email };
@@ -67,4 +80,7 @@ app.get('/rp', function(req, res) {
     }
 });
 
-}
+app.get('/', function(req, res) {
+    res.redirect('/rp');
+});
+
