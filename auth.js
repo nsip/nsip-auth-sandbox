@@ -25,6 +25,9 @@ var LDAP_OPTS = {
 
 passport.use(new LDAPStrategy(LDAP_OPTS));
 
+/*
+ * Users are identified by their LDAP DIB UUID.
+ */
 passport.serializeUser(function(user, done) {
   done(null, user.entryUUID);
 });
