@@ -1,0 +1,10 @@
+<p>Hi <%= user.uid %>!</p>
+<p><b><%= client.name %></b> is requesting access to your account.</p>
+<p>Do you approve?</p>
+
+<form action="/dialog/consent/decision" method="post">
+  <input name="transaction_id" type="hidden" value="<%= transactionID %>">
+  <div>
+  <input type="submit" value="Accept" id="accept">
+  </div>
+</form>allow
