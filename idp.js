@@ -6,7 +6,8 @@ var express = require('express')
   , site = require('./site')
   , oauth = require('./oauth')
   , user = require('./user')
-  
+  , oauth2 = require('./oauth2')
+  , oidc = require('openid-connect').oidc(oauth2.options));
   
 // Express configuration
   
@@ -33,7 +34,6 @@ app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 
 require('./auth');
 
-
 app.get('/', site.index);
 app.get('/login', site.loginForm);
 app.post('/login', site.login);
@@ -47,4 +47,12 @@ app.post('/oauth/request_token', oauth.requestToken);
 app.post('/oauth/access_token', oauth.accessToken);
   
 app.get('/api/userinfo', user.info);
+
+// OpenID Connect configuration
+
+app.get('/oauth2/authorize', oidc.auth());
+app.post('/oauth2/token', oidc.token());
+
+app.get('/dialog/consent', oauth2.consent);
+app.post('/dialog/consent/decision', oidc.consent());
 

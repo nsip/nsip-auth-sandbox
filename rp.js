@@ -7,6 +7,7 @@ var passport = require('passport');
 var PersonaStrategy = require('passport-persona').Strategy;
 var OAuthStrategy = require('passport-oauth').OAuthStrategy;
 var InternalOAuthError = require('passport-oauth').InternalOAuthError;
+var OpenIDConnectStrategy = require('passport-openidconnect').Strategy;
 
 var cel = require('connect-ensure-login');
 var app = exports.app = express();
@@ -47,7 +48,40 @@ passport.deserializeUser(function(id, done) {
 });
 
 /*
- * OAuth
+ * OpenID Connect
+ */
+
+passport.use(new OpenIDConnectStrategy({
+    tokenURL: 'http://auth-idp.dev.nsip.edu.au/oauth2/token',
+    authorizationURL: 'http://auth-idp.dev.nsip.edu.au/oauth2/authorize',
+    callbackURL: 'http://auth-rp.dev.nsip.edu.au/oauth2/callback',
+    clientID: '123-456-789',
+    clientSecret: 'shhh-its-a-secret'
+  },
+  function(token, tokenSecret, profile, done) {
+    if (profile && profile.emails) {
+        var user = { id: profile.emails[0] };
+
+        return done(null, user);
+    } else {
+        return done(null, false);
+    }
+  }
+));
+
+app.get('/oauth2',
+  passport.authenticate('oauth2'));
+
+app.get('/oauth2/callback',
+  passport.authenticate('oauth2', {
+    successRedirect: '/',
+    failureRedirect: '/login'
+  })
+);
+
+
+/*
+ * OAuth1
  */
 
 OAuthStrategy.prototype.userProfile = function (token, tokenSecret, params, done) {
@@ -126,7 +160,7 @@ app.get('/login', function(req, res) {
 	currentUser = '"' + req.user.id + '"';
     }
 
-var form = '<html><head><script src="https://login.persona.org/include.js"></script><script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script><script>navigator.id.watch({ loggedInUser: ' + currentUser + ', onlogin: function(assertion) { $.ajax({ type: "POST", url: "/persona", data: {assertion: assertion}, success: function(res, status, xhr) { window.location.replace("/"); }, error: function(xhr, status, err) { navigator.id.logout(); alert("Login failure: " + err); } }); }, onlogout: function() { $.ajax({ type: "GET", url: "/logout", success: function(res, status, xhr) { window.location.reload(); }, error: function(xhr, status, err) { alert("Logout failure: " + err); } }); } });function oauthRedirect() { window.open("/oauth"); }</script></head><body><button type="button" onclick="navigator.id.request()">Log In With Persona</button><button type="button" onclick="oauthRedirect()">Log In With OAuth 1.0</button></body></html>';
+var form = '<html><head><script src="https://login.persona.org/include.js"></script><script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script><script>navigator.id.watch({ loggedInUser: ' + currentUser + ', onlogin: function(assertion) { $.ajax({ type: "POST", url: "/persona", data: {assertion: assertion}, success: function(res, status, xhr) { window.location.replace("/"); }, error: function(xhr, status, err) { navigator.id.logout(); alert("Login failure: " + err); } }); }, onlogout: function() { $.ajax({ type: "GET", url: "/logout", success: function(res, status, xhr) { window.location.reload(); }, error: function(xhr, status, err) { alert("Logout failure: " + err); } }); } });function oauthRedirect() { window.open("/oauth"); } function oauth2Redirect() { window.open("/oauth2"); }</script></head><body><button type="button" onclick="navigator.id.request()">Log In With Persona</button><button type="button" onclick="oauthRedirect()">Log In With OAuth 1.0</button><button type="button" onclick="oauth2Redirect()">Log In With OAuth 2.0</button></body></html>';
     res.send(form);
 });
 
